@@ -1,0 +1,45 @@
+# Large model weights (download separately)
+models/yolov8l.pt
+models/sci_weights.pth
+models/*.pt
+models/*.pth
+
+# Generated run outputs
+runs/
+
+# Temporary scripts and results
+actual_detection_results.json
+augmented_results.json
+read_pdf.py
+validate_nb.py
+run_inference.py
+run_augmented.py
+run_notebook.py
+
+# Original spec and submission PDFs (not source code)
+Project.pdf
+report.pdf
+final_report.pdf
+
+# ExDark nested git objects and large binary files
+data/ExDark/.git/
+data/ExDark/Dataset/
+data/ExDark/SPIC/*.gif
+data/ExDark/SPIC/*.mat
+data/ExDark/SPIC/*.zip
+data/ExDark/SPIC/GPR_v1.1.zip
+data/ExDark/SPIC/matconvnet-1.0-beta20.tar.gz
+data/exdark_all.txt
+data/exdark_enhanced_all.txt
+data/exdark.yaml
+data/exdark_enhanced.yaml
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store
+Thumbs.db
