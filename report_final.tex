@@ -51,8 +51,8 @@ methodology, we reproduce the CVPR~2022 Self-Calibrated Illumination
 state-of-the-art YOLOv8-Large detector on the Exclusively Dark (ExDark)
 dataset. We evaluate both a neural-network-based enhancement (SCI) and a
 classical alternative (CLAHE) across three genuine ExDark samples and
-18~augmented test pairs representing five distinct low-light degradation
-types. Brightness is consistently improved by 74--154\% across all
+15~augmented test pairs representing five distinct low-light degradation
+types. Brightness is consistently improved by 74--153\% across all
 images. Detection confidence improves by up to $+40\%$ on individual
 images, and recall increases substantially in dense scenes (6$\to$12
 detections on a car scene). Our results confirm that illumination
@@ -206,7 +206,7 @@ Our project makes the following specific contributions:
   pairs for a systematic robustness analysis.
 
   \item \textbf{Quantitative Analysis:} We report brightness gain metrics
-  (74--154\%), detection confidence improvements (up to $+40\%$), and
+  (74--153\%), detection confidence improvements (up to $+40\%$), and
   detection count analysis in dense scenes.
 \end{enumerate}
 
@@ -237,8 +237,8 @@ colour-space decomposition (clip limit~3.0, tile grid $8{\times}8$).
 The module produced $3 \times 6 = 18$ image variants with correct
 degradation characteristics.
 \emph{Error Analysis:}
-The \emph{combined} degradation (darken $\times 0.4$ + noise
-$\sigma=20$) reduces brightness below 15/255---flagged as a
+The \emph{combined} degradation (darken $\times 0.5$ + noise
+$\sigma=15$) reduces brightness below 15/255---flagged as a
 stress-test scenario.
 
 \textbf{Week~3 (28 Apr -- 3 May) --- Detection Experiments \& Metrics.}
@@ -585,13 +585,13 @@ across all three images for each augmentation type.
 \textbf{Augmentation} & \textbf{Mean Conf.\,$\Delta$} & \textbf{Det.\,$\Delta$\,(mean)} \\
 \midrule
 Original (low-light)  & $+0.032$ & $+0.33$ \\
-Blurred (5$\times$5)  & $+0.063$ & $\pm0.00$ \\
-Gamma ($\gamma=2.5$)  & $+0.070$ & $+0.67$ \\
-Darkened ($\times$0.4) & $-0.063$ & $+0.33$ \\
-Gaussian Noise        & $-0.147$ & $-0.33$ \\
-Combined (dark+noise) & $-0.249$ & $-0.67$ \\
+Blurred (5$\times$5)  & $+0.024$ & $\pm0.00$ \\
+Gamma ($\gamma=2.5$)  & $+0.062$ & $+0.33$ \\
+Darkened ($\times$0.4) & $-0.051$ & $+0.33$ \\
+Gaussian Noise        & $-0.206$ & $-0.67$ \\
+Combined (dark+noise) & $-0.123$ & $-0.67$ \\
 \midrule
-\textbf{Overall Mean} & $-0.049$ & $+0.06$ \\
+\textbf{Overall Mean} & $-0.044$ & $-0.06$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -704,7 +704,7 @@ subject--background contrast.
 Our results confirm that illumination enhancement as a preprocessing step
 for YOLOv8 provides tangible benefits for low-light detection. Brightness
 is universally improved (mean $+120\%$), detection confidence improves in
-2 of 3 original images and 7 of 18 augmented pairs, and recall improves
+7 of 18 total test pairs (including 2 of 3 original images), and recall improves
 in dense scenes. The pipeline adds negligible latency---CLAHE processes a
 $640{\times}480$ image in under 5\,ms on CPU.
 
@@ -726,8 +726,8 @@ Our analysis identifies three distinct failure modes, each tied to
 specific augmentation conditions:
 
 \textbf{Failure Mode 1: Noise amplification.}
-The \emph{combined} augmentation (darkening $\times 0.4$ plus Gaussian
-noise $\sigma=20$) exposes the fundamental limit of single-pass
+The \emph{combined} augmentation (darkening $\times 0.5$ plus Gaussian
+noise $\sigma=15$) exposes the fundamental limit of single-pass
 histogram-based enhancement.  CLAHE cannot distinguish signal from
 noise in the L~channel: it equalises both, producing a brighter but
 noisier image.  On image 2015\_06400 (combined), detection confidence
@@ -823,7 +823,7 @@ genuine low-light images and five augmented degradation types.
 Key findings are:
 \begin{enumerate}
   \item Enhancement consistently improves image brightness by
-  74--154\%, with an average brightness gain of $+20$ intensity levels
+  74--153\%, with an average brightness gain of $+20$ intensity levels
   across all 18 test pairs.
 
   \item Detection confidence improves by up to $+40\%$ on individual
