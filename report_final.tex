@@ -212,111 +212,60 @@ Our project makes the following specific contributions:
 
 \subsection{Week-by-Week Breakdown}
 
-The rubric requires a detailed week-by-week account of methodology,
-results, and error analysis activities. We present this below.
-
 \textbf{Week~1 (14--20 April) --- Paper Selection \& SCI Reproduction.}
 \emph{Methodology:}
-We surveyed eight candidate papers spanning neural enhancement
-(Zero-DCE, URetinex-Net, SCI, SNR-aware), joint adaptation
-(HLA-Face, IA-YOLO), and augmentation-based approaches.  After
-evaluating each paper against our Reproduce-and-Adapt criteria
-(public code, lightweight architecture, applicability to real-time
-detection), we selected SCI~\cite{ma2022sci} for its unique
-weight-sharing calibration that collapses to a single inference pass.
-We reproduced the full SCI architecture in PyTorch
-(\texttt{EnhanceBlock}: three Conv2d layers $3{\to}32{\to}32{\to}3$
-with ReLU activations and a Sigmoid output;
-\texttt{CalibrateBlock}: three Conv2d layers $6{\to}32{\to}32{\to}3$
-with a residual sigmoid update).  The complete model has 22,886
-parameters.
+We surveyed eight candidate papers and selected
+SCI~\cite{ma2022sci} for its weight-sharing calibration that
+collapses to a single inference pass.  The full architecture was
+reproduced in PyTorch (22,886 parameters).
 \emph{Results:}
-The architecture was verified to match the paper's description;
-forward-pass dimensions were validated on synthetic inputs.
-However, we discovered that the original authors' weight download
-server is no longer accessible, preventing us from loading pretrained
-weights.
+Forward-pass dimensions validated; however, the original authors'
+weight server is no longer accessible.
 \emph{Error Analysis:}
-Without pretrained weights, the randomly initialised SCI model
-produces meaningless illumination maps.  We therefore implemented a
-CLAHE-based fallback enhancer as a deterministic classical baseline
-(see Section~\ref{sec:methodology}).  This design decision is
-discussed further in Section~\ref{sec:discussion}.
+Without pretrained weights the model produces meaningless outputs,
+so we implemented a CLAHE fallback
+(Section~\ref{sec:methodology}).
 
-\textbf{Week~2 (21--27 April) --- Data Pipeline \& Augmentation Module.}
+\textbf{Week~2 (21--27 April) --- Data Pipeline \& Augmentation.}
 \emph{Methodology:}
-We acquired three SPIC sample images from the ExDark dataset
-repository, representing genuine extreme-darkness captures
-(mean brightness 3.8--9.4\% of full scale).  We built a modular
-data-ingestion pipeline that automatically discovers images under
-\texttt{data/ExDark/SPIC/}, computes per-image brightness statistics,
-and applies five augmentation strategies (Table~\ref{tab:augmentations}).
-Each augmentation was implemented as a pure OpenCV function to ensure
-reproducibility.  The CLAHE fallback was integrated using LAB colour
-space decomposition (L-channel only, clip limit~3.0, tile grid
-$8{\times}8$) to avoid colour distortion.
+We acquired three SPIC images from ExDark (mean brightness
+3.8--9.4\% of full scale), built a modular ingestion pipeline, and
+implemented five augmentation strategies
+(Table~\ref{tab:augmentations}).  CLAHE was integrated via LAB
+colour-space decomposition (clip limit~3.0, tile grid $8{\times}8$).
 \emph{Results:}
-All three sample images were successfully loaded and characterised;
-the augmentation module produced $3 \times 6 = 18$ image variants
-with correct degradation characteristics confirmed via visual
-inspection and brightness histogram analysis.
+The module produced $3 \times 6 = 18$ image variants with correct
+degradation characteristics.
 \emph{Error Analysis:}
-During augmentation design, we observed that the \emph{combined}
-degradation (darkening $\times 0.4$ plus Gaussian noise $\sigma=20$)
-reduces mean brightness below 15/255, approaching the noise floor of
-8-bit imagery.  This motivated us to treat the combined augmentation
-as a stress-test scenario in later analysis.
+The \emph{combined} degradation (darken $\times 0.4$ + noise
+$\sigma=20$) reduces brightness below 15/255---flagged as a
+stress-test scenario.
 
-\textbf{Week~3 (28 April -- 3 May) --- Detection Experiments \& Metrics.}
+\textbf{Week~3 (28 Apr -- 3 May) --- Detection Experiments \& Metrics.}
 \emph{Methodology:}
-We loaded YOLOv8-Large (43.7\,M parameters, pretrained on COCO) as a
-frozen feature extractor with no fine-tuning.
-Baseline inference was run on all 18 raw images (3~originals
-$\times$ 6~augmentation variants) at a capture threshold of
-$\tau_{\text{low}}=0.10$.  Enhanced inference was then run on the
-CLAHE-enhanced counterparts.  For each image pair we computed:
-mean detection confidence ($\bar{c}$), detection count above the
-reporting threshold ($N_{0.25}$, $\tau=0.25$), brightness gain
-($\Delta B$), PSNR, and SSIM.  All detection results were serialised
-to JSON files (\texttt{actual\_detection\_results.json},
-\texttt{augmented\_results.json}) for reproducibility.
+YOLOv8-Large was run as a frozen detector ($\tau_{\text{low}}=0.10$)
+on all 18 raw and CLAHE-enhanced image pairs; per-pair metrics
+(mean confidence, $N_{0.25}$, brightness gain, PSNR, SSIM) were
+serialised to JSON.
 \emph{Results:}
-On the three original images, CLAHE improved mean brightness by
-120\% on average.  Detection confidence improved in 2 of 3 images
-(up to $+40\%$).  The car scene (2015\_02446) showed a dramatic
-recall improvement: total detections increased from 6 to 12 at
-$\tau=0.10$, revealing vehicles previously hidden by deep shadows.
+CLAHE improved brightness by 120\% on average; confidence rose in
+2/3 images (up to $+40$\%).  The car scene gained 6 new detections.
 \emph{Error Analysis:}
-We identified two failure modes.  First, for the car scene the mean
-confidence \emph{decreased} from 0.544 to 0.408 despite improved recall,
-because the newly detected cars had low individual confidence (0.12--0.25).
-Second, the combined augmentation (dark+noise) caused CLAHE to amplify
-noise alongside the signal, degrading detection accuracy by up to
-$-0.244$ confidence points.
+Mean confidence in the car scene \emph{dropped} (0.544$\to$0.408)
+because newly revealed cars had low confidence (0.12--0.25).
+Combined augmentation degraded accuracy by up to $-0.244$ points.
 
-\textbf{Week~4 (4--9 May) --- Visualisation, Error Analysis \& Report.}
+\textbf{Week~4 (4--9 May) --- Visualisation \& Report.}
 \emph{Methodology:}
-We generated seven publication-quality comparison figures
-(Fig.~\ref{fig:raw}--\ref{fig:hist}) using Matplotlib, including
-side-by-side detection overlays, per-augmentation bar charts, and
-confidence histograms with CDF curves.  We also performed a
-per-detection error analysis on the JSON results to identify class-level
-patterns.  The IEEE-format report was written in \LaTeX{} and all
-results, figures, and code were documented on GitHub.
+Seven comparison figures were generated; per-detection JSON analysis
+identified class-level patterns; the IEEE report was written.
 \emph{Results:}
-The visualisations confirmed three qualitative improvement patterns
-(reduced false negatives, increased true-positive confidence, and
-class consistency---see Section~\ref{sec:results}).  The confidence
-CDF showed the proportion of detections above 0.5 increasing from
+The confidence CDF showed detections above 0.5 increasing from
 25\% to 40\% after enhancement.
 \emph{Error Analysis:}
-The per-detection JSON analysis revealed that the \emph{person} class
-benefited most from enhancement (confidence $+0.07$ on 2015\_06400),
-while the \emph{dog} class showed a confidence \emph{decrease}
-($0.569 \to 0.361$) after CLAHE, likely because CLAHE over-enhanced
-the background around the dog, reducing contrast against the subject.
-This motivates spatially adaptive or content-aware enhancement
-(see Section~\ref{sec:discussion}).
+The \emph{person} class benefited most ($+0.07$), while the
+\emph{dog} class lost confidence ($0.569 \to 0.361$) due to CLAHE
+over-enhancing the background (Section~\ref{sec:discussion}).
 
 %%==========================================================================
 \section{Methodology}
